@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import Redis from "ioredis";
 
+import { connectDB } from "@/services/dbService";
+
 let redis;
 
 function getRedis() {
@@ -18,7 +20,7 @@ export async function GET() {
     };
 
     try {
-        await mongoose.connect(process.env.MONGODB_URI);
+        await connectDB();
         health.mongodb = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
     } catch (err) {
         health.mongodb = 'error';
