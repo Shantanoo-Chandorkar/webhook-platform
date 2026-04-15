@@ -1,6 +1,7 @@
 import { connectDB } from "@/services/dbService";
 import { getRedis } from "@/services/redisService";
 import Endpoint from "@/models/Endpoint";
+import { buildCorsHeaders } from "@/lib/cors";
 
 /**
  * SSE stream endpoint — holds a long-lived connection and pushes
@@ -56,12 +57,19 @@ export async function GET(request, { params }) {
         },
     });
 
+    // The proxy layer cannot reliably set headers on a streaming response after
+    // it has started, so CORS headers are applied here directly using the same
+    // utility as proxy.js to keep the policy consistent across all routes.
+    const origin = request.headers.get("origin") ?? "";
+    const corsHeaders = buildCorsHeaders(origin);
+
     return new Response(readableStream, {
         headers: {
             "Content-Type": "text/event-stream",
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",
+            ...corsHeaders,
         },
     });
 }
