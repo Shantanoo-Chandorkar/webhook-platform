@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 /**
@@ -70,14 +69,9 @@ export function EndpointHeader({ endpoint, sseStatus, onDefaultReplayUrlSave }) 
 				<code className="flex-1 text-xs font-mono bg-muted rounded px-2 py-1.5 truncate text-foreground">
 					{endpoint.url}
 				</code>
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<Button variant="outline" size="sm" onClick={handleCopyUrl} className="h-7 text-xs shrink-0">
-							{urlCopied ? 'Copied!' : 'Copy'}
-						</Button>
-					</TooltipTrigger>
-					<TooltipContent>Copy webhook URL</TooltipContent>
-				</Tooltip>
+				<Button variant="outline" size="sm" onClick={handleCopyUrl} className="h-7 text-xs shrink-0">
+					{urlCopied ? 'Copied!' : 'Copy'}
+				</Button>
 			</div>
 
 			{/* Status row */}
