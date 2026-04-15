@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
@@ -20,6 +21,9 @@ const TIME_RANGE_OPTIONS = [
  * navigation and can be shared alongside the dashboard URL. All filtering is
  * applied in-memory against the full request array — no additional API calls.
  *
+ * Text inputs use local state for instant visual feedback; the actual filter
+ * application and URL write are debounced to avoid firing on every keystroke.
+ *
  * @param {{
  *   filters: { methods: string[], contentType: string, body: string, timeRange: string },
  *   onChange: function(object): void
@@ -28,6 +32,14 @@ const TIME_RANGE_OPTIONS = [
 export function FilterBar({ filters, onChange }) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+
+	// Local state gives the inputs instant visual feedback while typing
+	const [localContentType, setLocalContentType] = useState(filters.contentType);
+	const [localBody, setLocalBody] = useState(filters.body);
+
+	// Debounced values — these drive the actual filter application and URL update
+	const debouncedContentType = useDebounce(localContentType, 300);
+	const debouncedBody = useDebounce(localBody, 300);
 
 	// Sync URL params → filter state on mount so that shared URLs restore filters
 	useEffect(() => {
@@ -42,8 +54,23 @@ export function FilterBar({ filters, onChange }) {
 			body,
 			timeRange,
 		});
+
+		// Sync local text state to match URL-restored values
+		setLocalContentType(contentType);
+		setLocalBody(body);
 		// Only on mount — eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
+
+	// Apply filter + update URL only after the user has stopped typing
+	useEffect(() => {
+		updateFilters({ contentType: debouncedContentType });
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [debouncedContentType]);
+
+	useEffect(() => {
+		updateFilters({ body: debouncedBody });
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [debouncedBody]);
 
 	/**
 	 * Applies a partial filter update, merges it into state, and reflects the
@@ -102,17 +129,18 @@ export function FilterBar({ filters, onChange }) {
 				})}
 			</div>
 
-			{/* Content-Type and body search */}
+			{/* Content-Type and body search — local state provides instant feedback;
+			    filter application is debounced to avoid re-filtering on every keystroke */}
 			<Input
 				placeholder="Filter by content-type…"
-				value={filters.contentType}
-				onChange={(e) => updateFilters({ contentType: e.target.value })}
+				value={localContentType}
+				onChange={(e) => setLocalContentType(e.target.value)}
 				className="h-7 text-xs"
 			/>
 			<Input
 				placeholder="Search in body…"
-				value={filters.body}
-				onChange={(e) => updateFilters({ body: e.target.value })}
+				value={localBody}
+				onChange={(e) => setLocalBody(e.target.value)}
 				className="h-7 text-xs"
 			/>
 
