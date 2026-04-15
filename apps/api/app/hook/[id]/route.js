@@ -84,20 +84,28 @@ async function handleWebhook(request, params) {
             sourceIp,
         });
 
-        // Publish to Redis pub/sub for real-time SSE delivery
+        // Publish to Redis pub/sub for real-time SSE delivery.
+        // Normalise the payload to match the contract used by all other API routes
+        // (_id → id, Maps → plain objects, internal fields omitted).
         try {
             const redis = getRedis();
             const channel = `webhook:${endpoint._id.toString()}`;
-            await redis.publish(channel, JSON.stringify(webhookReq.toObject({ flattenMaps: true })));
+            const ssePayload = {
+                id: webhookReq._id.toString(),
+                method: webhookReq.method,
+                headers: Object.fromEntries(webhookReq.headers),
+                body: webhookReq.body,
+                query: Object.fromEntries(webhookReq.query),
+                sourceIp: webhookReq.sourceIp,
+                receivedAt: webhookReq.receivedAt,
+            };
+            await redis.publish(channel, JSON.stringify(ssePayload));
         } catch (err) {
             // Redis publish failure should not break the receiver — the request is already in MongoDB
             console.error("Redis publish failed:", err.message);
         }
 
-        return Response.json(
-            { accepted: true, id: webhookReq._id },
-            { status: 200 }
-        );
+        return Response.json({ accepted: true }, { status: 200 });
     } catch (err) {
         console.error("Webhook storage failed:", err.message);
         // Still return 200 to prevent sender retries
