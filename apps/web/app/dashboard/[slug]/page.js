@@ -174,6 +174,13 @@ function DashboardPage({ params }) {
 
 	return (
 		<div className="flex flex-col h-screen overflow-hidden">
+			{/* Site-level nav — provides a route back to the landing page */}
+			<nav className="flex items-center px-4 h-10 border-b border-border shrink-0">
+				<a href="/" className="text-sm font-semibold text-foreground hover:text-primary transition-colors">
+					← WebhookBin
+				</a>
+			</nav>
+
 			{/* Split panel layout */}
 			<div className="flex flex-1 min-h-0">
 				{/* Left panel — request list + controls */}
