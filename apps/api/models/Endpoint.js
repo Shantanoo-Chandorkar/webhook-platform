@@ -2,13 +2,13 @@ import mongoose from "mongoose";
 const {Schema} = mongoose;
 
 const endpointSchema = new Schema({
-    slug: {type: String, required: true},
+    slug: {type: String, required: true, unique: true},
     defaultReplayUrl: {
-        type: String, 
+        type: String,
         default: null
     },
     createdAt: {
-        type: Date, 
+        type: Date,
         default: Date.now,
     },
     expiresAt: {
@@ -22,6 +22,8 @@ const endpointSchema = new Schema({
     },
 });
 
+// TTL index: MongoDB auto-deletes documents when expiresAt is reached
+// Note: { slug: 1 } unique index is auto-created by unique: true on the field definition
 endpointSchema.index({expiresAt: 1}, {expireAfterSeconds: 0});
 
 const Endpoint = mongoose.model('Endpoint', endpointSchema);
