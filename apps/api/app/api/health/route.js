@@ -1,16 +1,7 @@
 import mongoose from "mongoose";
-import Redis from "ioredis";
 
 import { connectDB } from "@/services/dbService";
-
-let redis;
-
-function getRedis() {
-    if(!redis) {
-        redis = new Redis(process.env.REDIS_URL);
-    }
-    return redis;
-}
+import { getRedis } from "@/services/redisService";
 
 export async function GET() {
     const health = {
