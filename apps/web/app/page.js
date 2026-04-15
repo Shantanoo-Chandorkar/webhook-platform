@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { createEndpoint } from '@/lib/api';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -14,14 +13,13 @@ const MAX_RECENT_SLUGS = 5;
  * localStorage for quick access without requiring an account.
  */
 export default function LandingPage() {
-	const router = useRouter();
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [error, setError] = useState(null);
 	const [recentSlugs, setRecentSlugs] = useLocalStorage('webhook_recent_slugs', []);
 
 	/**
-	 * Creates a new endpoint, stores the slug in the recent list, and
-	 * redirects to the dashboard.
+	 * Creates a new endpoint and stores the slug in the recent list.
+	 * The user navigates to the dashboard themselves via the "Open →" link.
 	 */
 	async function handleGenerate() {
 		setIsGenerating(true);
@@ -35,9 +33,9 @@ export default function LandingPage() {
 					MAX_RECENT_SLUGS,
 				),
 			);
-			router.push(`/dashboard/${endpoint.slug}`);
 		} catch (err) {
 			setError(err.message);
+		} finally {
 			setIsGenerating(false);
 		}
 	}
