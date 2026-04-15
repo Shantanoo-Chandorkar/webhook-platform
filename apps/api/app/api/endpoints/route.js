@@ -23,7 +23,7 @@ export async function POST() {
             {
                 id: endpoint._id,
                 slug: endpoint.slug,
-                url: `${process.env.NEXT_PUBLIC_API_URL}/hook/${endpoint.slug}`,
+                url: `${process.env.API_BASE_URL}/hook/${endpoint.slug}`,
                 defaultReplayUrl: endpoint.defaultReplayUrl,
                 expiresAt: endpoint.expiresAt,
             },
