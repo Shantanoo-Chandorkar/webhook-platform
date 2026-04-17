@@ -72,8 +72,18 @@ export async function patchEndpoint(slug, payload) {
  * @param {number} limit - Number of items per page
  * @returns {Promise<{ requests: Array, totalCount: number, totalPages: number, page: number }>}
  */
-export async function getRequests(slug, page = 1, limit = 100) {
+export async function getRequests(slug, page = 1, limit = 200) {
     return request(`/api/endpoints/${slug}/requests?page=${page}&limit=${limit}`);
+}
+
+/**
+ * Deletes all requests (and their replays) for an endpoint.
+ *
+ * @param {string} slug - The 8-character endpoint slug
+ * @returns {Promise<{ deleted: number }>}
+ */
+export async function deleteAllRequests(slug) {
+    return request(`/api/endpoints/${slug}/requests`, { method: 'DELETE' });
 }
 
 /**

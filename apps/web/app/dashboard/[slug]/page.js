@@ -2,7 +2,14 @@
 
 import { useState, useEffect, useMemo, use } from 'react';
 import { Suspense } from 'react';
-import { getEndpoint, getRequests, getRequest, deleteRequest, patchEndpoint } from '@/lib/api';
+import {
+    getEndpoint,
+    getRequests,
+    getRequest,
+    deleteRequest,
+    patchEndpoint,
+    deleteAllRequests,
+} from '@/lib/api';
 import { useSSE } from '@/hooks/useSSE';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { EndpointHeader } from '@/components/EndpointHeader';
@@ -11,6 +18,7 @@ import { RequestList } from '@/components/RequestList';
 import { RequestDetail } from '@/components/RequestDetail';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const DISPLAY_PAGE_SIZE = 25;
 
 /**
  * Dashboard page for a single endpoint.
@@ -18,6 +26,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
  * Layout: fixed-height split panel with the request list on the left and the
  * detail panel on the right. Real-time updates arrive via SSE and are prepended
  * to the in-memory request list without requiring a page refresh.
+ *
+ * Pagination is client-side only — up to 200 requests are loaded on mount and
+ * displayed 25 at a time. Filtering works across all loaded data regardless of
+ * which display page is active.
  */
 function DashboardPage({ params }) {
     const { slug } = use(params);
@@ -25,16 +37,23 @@ function DashboardPage({ params }) {
     const [endpoint, setEndpoint] = useState(null);
     const [notFound, setNotFound] = useState(false);
     const [requests, setRequests] = useState([]);
+    const [isLoadingRequests, setIsLoadingRequests] = useState(true);
+    // Map of IP → { retryAfter, blockedAt } — populated by real-time rate_limited SSE events
+    const [blockedIps, setBlockedIps] = useState(new Map());
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [selectedRequestId, setSelectedRequestId] = useState(null);
-    const [totalPages, setTotalPages] = useState(1);
-    const [currentPage, setCurrentPage] = useState(1);
     const [filters, setFilters] = useState({
         methods: [],
         contentType: '',
         body: '',
         timeRange: 'all',
     });
+
+    // Display pagination — independent of the server-side page cursor
+    const [displayPage, setDisplayPage] = useState(1);
+    // True when a live SSE request arrives while the user is not on page 1,
+    // so we can surface a banner rather than silently updating a page they cannot see
+    const [newRequestsOnPageOne, setNewRequestsOnPageOne] = useState(false);
 
     // Persist slug in recent list so the landing page can show it
     const [, setRecentSlugs] = useLocalStorage('webhook_recent_slugs', []);
@@ -54,11 +73,12 @@ function DashboardPage({ params }) {
             }
 
             try {
-                const data = await getRequests(slug, 1, 100);
+                const data = await getRequests(slug, 1, 200);
                 setRequests(data.requests ?? []);
-                setTotalPages(data.totalPages ?? 1);
             } catch {
                 // Non-fatal — the list will just be empty on load failure
+            } finally {
+                setIsLoadingRequests(false);
             }
         }
 
@@ -71,11 +91,32 @@ function DashboardPage({ params }) {
         if (eventType === 'webhook') {
             // Prepend so the newest request is always at the top
             setRequests((prev) => [data, ...prev]);
+            // If the user is on a page other than 1, flag that new content arrived
+            // rather than silently updating a list they aren't looking at
+            setDisplayPage((currentPage) => {
+                if (currentPage > 1) {
+                    setNewRequestsOnPageOne(true);
+                }
+                return currentPage;
+            });
+        } else if (eventType === 'rate_limited') {
+            setBlockedIps((prev) => {
+                const next = new Map(prev);
+                next.set(data.ip, { retryAfter: data.retryAfter, blockedAt: data.blockedAt });
+                return next;
+            });
         }
     });
 
     // Derive filtered list from full list + active filters
     const filteredRequests = useMemo(() => applyFilters(requests, filters), [requests, filters]);
+
+    // Slice the filtered list down to the current display page
+    const totalDisplayPages = Math.max(1, Math.ceil(filteredRequests.length / DISPLAY_PAGE_SIZE));
+    const paginatedRequests = filteredRequests.slice(
+        (displayPage - 1) * DISPLAY_PAGE_SIZE,
+        displayPage * DISPLAY_PAGE_SIZE,
+    );
 
     /**
      * Fetches full request detail (including replays) when a row is selected.
@@ -117,6 +158,18 @@ function DashboardPage({ params }) {
     }
 
     /**
+     * Deletes all requests for this endpoint and resets list state.
+     */
+    async function handleClearAll() {
+        await deleteAllRequests(slug);
+        setRequests([]);
+        setSelectedRequest(null);
+        setSelectedRequestId(null);
+        setDisplayPage(1);
+        setNewRequestsOnPageOne(false);
+    }
+
+    /**
      * Persists the new default replay URL on the endpoint and updates local state.
      *
      * @param {string} url
@@ -127,16 +180,15 @@ function DashboardPage({ params }) {
     }
 
     /**
-     * Loads the next page of request history and appends it to the list.
+     * Changes the display page and clears the new-requests banner when
+     * navigating back to page 1.
+     *
+     * @param {number} page
      */
-    async function handleLoadMore() {
-        const nextPage = currentPage + 1;
-        try {
-            const data = await getRequests(slug, nextPage, 100);
-            setRequests((prev) => [...prev, ...(data.requests ?? [])]);
-            setCurrentPage(nextPage);
-        } catch {
-            // Non-fatal
+    function handleDisplayPageChange(page) {
+        setDisplayPage(page);
+        if (page === 1) {
+            setNewRequestsOnPageOne(false);
         }
     }
 
@@ -144,6 +196,22 @@ function DashboardPage({ params }) {
     function handleReplayUrlSaved(url) {
         setEndpoint((prev) => (prev ? { ...prev, defaultReplayUrl: url } : prev));
     }
+
+    // Reset to page 1 whenever filters change — the page count may shrink
+    // and the user should see results from the beginning of the filtered set
+    const filtersKey = JSON.stringify(filters);
+    useEffect(() => {
+        setDisplayPage(1);
+        setNewRequestsOnPageOne(false);
+    }, [filtersKey]);
+
+    // Clamp displayPage to the highest valid page whenever deletions shrink the list.
+    // totalDisplayPages is always at least 1, so this also handles the "all deleted" case.
+    useEffect(() => {
+        if (displayPage > totalDisplayPages) {
+            setDisplayPage(totalDisplayPages);
+        }
+    }, [totalDisplayPages, displayPage]);
 
     if (notFound) {
         return (
@@ -190,12 +258,17 @@ function DashboardPage({ params }) {
                     />
                     <FilterBar filters={filters} onChange={setFilters} />
                     <RequestList
-                        requests={filteredRequests}
+                        requests={paginatedRequests}
+                        isLoadingRequests={isLoadingRequests}
+                        blockedIps={blockedIps}
                         selectedId={selectedRequestId}
                         onSelect={handleSelectRequest}
-                        totalPages={totalPages}
-                        currentPage={currentPage}
-                        onLoadMore={handleLoadMore}
+                        displayPage={displayPage}
+                        totalDisplayPages={totalDisplayPages}
+                        onPageChange={handleDisplayPageChange}
+                        newRequestsOnPageOne={newRequestsOnPageOne}
+                        totalRequestCount={filteredRequests.length}
+                        onClearAll={handleClearAll}
                     />
                 </aside>
 

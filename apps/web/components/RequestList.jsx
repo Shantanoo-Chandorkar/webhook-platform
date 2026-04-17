@@ -2,68 +2,140 @@
 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MethodBadge } from '@/components/MethodBadge';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { cn } from '@/lib/utils';
 
 /**
- * Scrollable list of captured webhook requests.
+ * Scrollable list of captured webhook requests with client-side pagination
+ * and a bulk-delete action.
  *
- * Each row shows the HTTP method, relative timestamp, source IP, content-type,
- * and body size. Clicking a row selects it for full inspection.
+ * Pagination controls are rendered above the list so the user can navigate
+ * without scrolling on a newest-first feed. A banner appears when live
+ * requests arrive while the user is on a page other than 1.
  *
  * @param {{
  *   requests: Array,
+ *   isLoadingRequests: boolean,
+ *   blockedIps: Map<string, { retryAfter: number, blockedAt: string }>,
  *   selectedId: string|null,
  *   onSelect: function(string): void,
- *   totalPages: number,
- *   currentPage: number,
- *   onLoadMore: function(): void
+ *   displayPage: number,
+ *   totalDisplayPages: number,
+ *   onPageChange: function(number): void,
+ *   newRequestsOnPageOne: boolean,
+ *   totalRequestCount: number,
+ *   onClearAll: function(): void,
  * }} props
  */
 export function RequestList({
     requests,
+    isLoadingRequests,
+    blockedIps,
     selectedId,
     onSelect,
-    totalPages,
-    currentPage,
-    onLoadMore,
+    displayPage,
+    totalDisplayPages,
+    onPageChange,
+    newRequestsOnPageOne,
+    totalRequestCount,
+    onClearAll,
 }) {
-    if (requests.length === 0) {
-        return (
-            <div className="flex-1 flex items-center justify-center text-center px-4">
-                <p className="text-sm text-muted-foreground">
-                    No requests yet.
-                    <br />
-                    Send a webhook to your endpoint URL.
-                </p>
-            </div>
-        );
-    }
-
     return (
         <div className="flex-1 flex flex-col min-h-0">
-            <ScrollArea className="flex-1">
-                <ul className="flex flex-col">
-                    {requests.map((req) => (
-                        <RequestRow
-                            key={req.id}
-                            request={req}
-                            isSelected={req.id === selectedId}
-                            onClick={() => onSelect(req.id)}
-                        />
-                    ))}
-                </ul>
-
-                {totalPages > currentPage && (
-                    <div className="p-3 flex justify-center">
-                        <button
-                            onClick={onLoadMore}
-                            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            Load more
-                        </button>
+            {/* Header row — pagination controls and clear-all button */}
+            <div className="px-3 py-2 border-b border-border shrink-0 flex flex-col gap-1.5">
+                {/* Rate limit banner — shown when one or more IPs have been blocked on this endpoint */}
+                {blockedIps.size > 0 && (
+                    <div className="rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
+                        <p className="font-medium mb-1">Rate limit active</p>
+                        {[...blockedIps.entries()].map(([ip, { blockedAt }]) => (
+                            <p key={ip} className="font-mono">
+                                {ip} — blocked {formatRelative(blockedAt)}
+                            </p>
+                        ))}
                     </div>
                 )}
-            </ScrollArea>
+
+                {/* Live-request banner — only shown when the user is past page 1 */}
+                {newRequestsOnPageOne && (
+                    <button
+                        onClick={() => onPageChange(1)}
+                        className="w-full text-xs text-center bg-primary/10 text-primary hover:bg-primary/20 transition-colors rounded px-2 py-1"
+                    >
+                        ↑ New requests — go to page 1
+                    </button>
+                )}
+
+                <div className="flex items-center justify-between">
+                    {/* Pagination controls */}
+                    {totalDisplayPages > 1 ? (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <button
+                                onClick={() => onPageChange(displayPage - 1)}
+                                disabled={displayPage === 1}
+                                className="hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                                ← Prev
+                            </button>
+                            <span>
+                                {displayPage} / {totalDisplayPages}
+                            </span>
+                            <button
+                                onClick={() => onPageChange(displayPage + 1)}
+                                disabled={displayPage === totalDisplayPages}
+                                className="hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                                Next →
+                            </button>
+                        </div>
+                    ) : (
+                        // Spacer so the clear-all button stays right-aligned when there is no pagination
+                        <span />
+                    )}
+
+                    {/* Clear all — only shown when there is something to clear */}
+                    {totalRequestCount > 0 && (
+                        <ConfirmDialog
+                            trigger={
+                                <button className="text-xs text-muted-foreground hover:text-destructive transition-colors">
+                                    Clear all
+                                </button>
+                            }
+                            title="Clear all requests"
+                            description={`Delete all ${totalRequestCount} request${totalRequestCount === 1 ? '' : 's'}? This cannot be undone.`}
+                            confirmLabel="Clear all"
+                            onConfirm={onClearAll}
+                        />
+                    )}
+                </div>
+            </div>
+
+            {isLoadingRequests ? (
+                <div className="flex-1 flex items-center justify-center">
+                    <p className="text-sm text-muted-foreground">Loading requests…</p>
+                </div>
+            ) : requests.length === 0 ? (
+                <div className="flex-1 flex items-center justify-center text-center px-4">
+                    <p className="text-sm text-muted-foreground">
+                        No requests yet.
+                        <br />
+                        Send a webhook to your endpoint URL.
+                    </p>
+                </div>
+            ) : (
+                <ScrollArea className="flex-1">
+                    <ul className="flex flex-col">
+                        {requests.map((req) => (
+                            <RequestRow
+                                key={req.id}
+                                request={req}
+                                isSelected={req.id === selectedId}
+                                onClick={() => onSelect(req.id)}
+                            />
+                        ))}
+                    </ul>
+                </ScrollArea>
+            )}
         </div>
     );
 }
