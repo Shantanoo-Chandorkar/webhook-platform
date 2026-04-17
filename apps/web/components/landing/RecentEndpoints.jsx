@@ -13,8 +13,8 @@
  */
 export function RecentEndpoints({ slugs, onClear }) {
     return (
-        <section className="py-16 px-6 border-t border-border">
-            <div className="max-w-xl mx-auto flex flex-col gap-4">
+        <section className="pt-12 pb-8 px-6 border-t border-border">
+            <div className="mx-auto flex flex-col gap-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
                         Recent Endpoints

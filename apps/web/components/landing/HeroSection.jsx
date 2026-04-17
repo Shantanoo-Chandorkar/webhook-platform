@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { RecentEndpoints } from './RecentEndpoints';
 
 /**
  * Landing page hero with headline, subtitle, primary CTA, and inline error display.
@@ -11,10 +12,10 @@ import { Button } from '@/components/ui/button';
  *   error: string|null,
  * }} props
  */
-export function HeroSection({ onGenerate, isGenerating, error }) {
+export function HeroSection({ onGenerate, isGenerating, error, slugs, onClearHistory }) {
     return (
         <section className="py-24 px-6 flex flex-col items-center text-center gap-6">
-            <div className="max-w-2xl flex flex-col items-center gap-5">
+            <div className="flex flex-col items-center gap-5">
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                     Webhook Inspection Tool
                 </p>
@@ -32,12 +33,18 @@ export function HeroSection({ onGenerate, isGenerating, error }) {
 
                 <div className="flex flex-col items-center gap-2 mt-2">
                     <Button size="lg" onClick={onGenerate} disabled={isGenerating} className="px-8">
-                        {isGenerating ? 'Generating...' : 'Get Started Free'}
+                        {isGenerating ? 'Generating...' : 'Generate Endpoint'}
                     </Button>
                     <p className="text-xs text-muted-foreground">
                         No signup required. Endpoints expire after 24 hours.
                     </p>
                     {error && <p className="text-sm text-destructive">{error}</p>}
+
+                    {slugs.length > 0 && (
+                        <div className="mt-4 w-[50vw]">
+                            <RecentEndpoints slugs={slugs} onClear={onClearHistory} />
+                        </div>
+                    )}
                 </div>
             </div>
         </section>

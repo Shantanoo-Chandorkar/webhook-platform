@@ -7,7 +7,6 @@ import { SiteNav } from '@/components/landing/SiteNav';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { FeatureGrid } from '@/components/landing/FeatureGrid';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
-import { RecentEndpoints } from '@/components/landing/RecentEndpoints';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 
 const MAX_RECENT_SLUGS = 5;
@@ -57,13 +56,11 @@ export default function LandingPage() {
                     onGenerate={handleGenerate}
                     isGenerating={isGenerating}
                     error={error}
+                    slugs={recentSlugs}
+                    onClearHistory={handleClearHistory}
                 />
                 <FeatureGrid />
                 <HowItWorksSection />
-
-                {recentSlugs.length > 0 && (
-                    <RecentEndpoints slugs={recentSlugs} onClear={handleClearHistory} />
-                )}
             </main>
 
             <SiteFooter />
