@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { JsonViewer } from '@/components/JsonViewer';
 import { ReplayPanel } from '@/components/ReplayPanel';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useState } from 'react';
 
 /**
@@ -42,7 +43,6 @@ export function RequestDetail({
     }
 
     async function handleDelete() {
-        if (!confirm('Delete this request?')) return;
         setIsDeleting(true);
         try {
             await deleteRequest(request.id);
@@ -96,15 +96,22 @@ export function RequestDetail({
                     >
                         Download JSON
                     </Button>
-                    <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={handleDelete}
-                        disabled={isDeleting}
-                        className="text-xs h-7"
-                    >
-                        {isDeleting ? 'Deleting…' : 'Delete'}
-                    </Button>
+                    <ConfirmDialog
+                        trigger={
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                disabled={isDeleting}
+                                className="text-xs h-7"
+                            >
+                                {isDeleting ? 'Deleting…' : 'Delete'}
+                            </Button>
+                        }
+                        title="Delete request"
+                        description="This request will be permanently deleted. This cannot be undone."
+                        confirmLabel="Delete"
+                        onConfirm={handleDelete}
+                    />
                 </div>
             </div>
 
