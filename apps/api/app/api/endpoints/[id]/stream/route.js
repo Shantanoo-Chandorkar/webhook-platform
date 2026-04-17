@@ -31,9 +31,18 @@ export async function GET(request, { params }) {
     const encoder = new TextEncoder();
     const readableStream = new ReadableStream({
         start(ctrl) {
-            // Listen for pub/sub messages on the Redis channel
+            // Listen for pub/sub messages on the Redis channel.
+            // Read the event type from the payload so new event types (e.g. rate_limited)
+            // are forwarded without changing this handler again.
             subscriber.on('message', (_ch, message) => {
-                const sseData = `event: webhook\ndata: ${message}\n\n`;
+                let eventType = 'webhook';
+                try {
+                    const parsed = JSON.parse(message);
+                    if (parsed.eventType) eventType = parsed.eventType;
+                } catch {
+                    // Malformed message — fall back to 'webhook'
+                }
+                const sseData = `event: ${eventType}\ndata: ${message}\n\n`;
                 ctrl.enqueue(encoder.encode(sseData));
             });
 

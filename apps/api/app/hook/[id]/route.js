@@ -1,5 +1,6 @@
 import { connectDB } from '@/services/dbService';
 import { getRedis } from '@/services/redisService';
+import { checkRateLimit } from '@/services/rateLimitService';
 import Endpoint from '@/models/Endpoint';
 import WebhookRequest from '@/models/WebhookRequest';
 
@@ -51,6 +52,48 @@ async function handleWebhook(request, params) {
         return Response.json({ accepted: false, reason: 'unknown endpoint' }, { status: 200 });
     }
 
+    // Extract source IP before rate limiting — same logic used later for storage
+    const sourceIp =
+        request.headers.get('x-forwarded-for')?.split(',')[0] ||
+        request.headers.get('x-real-ip') ||
+        'unknown';
+
+    // Enforce per-IP per-endpoint rate limit before touching the database.
+    // Scoped per endpoint so a banned IP on one endpoint is not affected on others.
+    try {
+        const { allowed } = await checkRateLimit(sourceIp, endpoint._id.toString());
+        if (!allowed) {
+            // Notify the dashboard in real-time that this IP is being rate limited.
+            // Failure here must not affect the 429 response — the block is already enforced.
+            try {
+                const redis = getRedis();
+                const channel = `webhook:${endpoint._id.toString()}`;
+                await redis.publish(
+                    channel,
+                    JSON.stringify({
+                        eventType: 'rate_limited',
+                        ip: sourceIp,
+                        retryAfter: 3600,
+                        blockedAt: new Date().toISOString(),
+                    }),
+                );
+            } catch (err) {
+                console.error('Rate limit Redis publish failed:', err.message);
+            }
+            return Response.json(
+                { error: 'Rate limit exceeded. This IP has been blocked for 1 hour.' },
+                {
+                    status: 429,
+                    headers: { 'Retry-After': '3600' },
+                },
+            );
+        }
+    } catch (err) {
+        // Rate limit check failure should not block legitimate webhooks —
+        // log and allow through rather than dropping requests silently
+        console.error('Rate limit check failed:', err.message);
+    }
+
     // Capture all request details
     const method = request.method;
     const headers = Object.fromEntries(request.headers.entries());
@@ -64,12 +107,6 @@ async function handleWebhook(request, params) {
     } catch {
         // Body may be empty or unreadable
     }
-
-    // Extract source IP from common proxy headers or fall back to unknown
-    const sourceIp =
-        request.headers.get('x-forwarded-for')?.split(',')[0] ||
-        request.headers.get('x-real-ip') ||
-        'unknown';
 
     try {
         const webhookReq = await WebhookRequest.create({
@@ -88,6 +125,7 @@ async function handleWebhook(request, params) {
             const redis = getRedis();
             const channel = `webhook:${endpoint._id.toString()}`;
             const ssePayload = {
+                eventType: 'webhook',
                 id: webhookReq._id.toString(),
                 method: webhookReq.method,
                 headers: Object.fromEntries(webhookReq.headers),
