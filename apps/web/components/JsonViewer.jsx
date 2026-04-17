@@ -11,38 +11,38 @@ import { Button } from '@/components/ui/button';
  * @param {{ body: string|null, contentType: string }} props
  */
 export function JsonViewer({ body, contentType }) {
-	const [copied, setCopied] = useState(false);
+    const [copied, setCopied] = useState(false);
 
-	if (!body) {
-		return (
-			<div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
-				No body
-			</div>
-		);
-	}
+    if (!body) {
+        return (
+            <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
+                No body
+            </div>
+        );
+    }
 
-	async function handleCopy() {
-		await navigator.clipboard.writeText(body);
-		setCopied(true);
-		setTimeout(() => setCopied(false), 2000);
-	}
+    async function handleCopy() {
+        await navigator.clipboard.writeText(body);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    }
 
-	const type = contentType?.toLowerCase() ?? '';
-	const rendered = renderBody(body, type);
+    const type = contentType?.toLowerCase() ?? '';
+    const rendered = renderBody(body, type);
 
-	return (
-		<div className="relative">
-			<Button
-				variant="ghost"
-				size="sm"
-				onClick={handleCopy}
-				className="absolute top-2 right-2 text-xs h-7 z-10"
-			>
-				{copied ? 'Copied!' : 'Copy'}
-			</Button>
-			{rendered}
-		</div>
-	);
+    return (
+        <div className="relative">
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopy}
+                className="absolute top-2 right-2 text-xs h-7 z-10"
+            >
+                {copied ? 'Copied!' : 'Copy'}
+            </Button>
+            {rendered}
+        </div>
+    );
 }
 
 /**
@@ -56,29 +56,29 @@ export function JsonViewer({ body, contentType }) {
  * @returns {JSX.Element}
  */
 function renderBody(body, contentType) {
-	if (contentType.includes('application/json')) {
-		try {
-			const parsed = JSON.parse(body);
-			const pretty = JSON.stringify(parsed, null, 2);
-			return <PrettyPre text={pretty} />;
-		} catch {
-			// JSON.parse failed — fall through to raw display
-		}
-	}
+    if (contentType.includes('application/json')) {
+        try {
+            const parsed = JSON.parse(body);
+            const pretty = JSON.stringify(parsed, null, 2);
+            return <PrettyPre text={pretty} />;
+        } catch {
+            // JSON.parse failed — fall through to raw display
+        }
+    }
 
-	if (contentType.includes('application/x-www-form-urlencoded')) {
-		try {
-			const params = new URLSearchParams(body);
-			const entries = [...params.entries()];
-			if (entries.length > 0) {
-				return <KeyValueTable rows={entries} />;
-			}
-		} catch {
-			// Malformed URL-encoded data — fall through to raw display
-		}
-	}
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+        try {
+            const params = new URLSearchParams(body);
+            const entries = [...params.entries()];
+            if (entries.length > 0) {
+                return <KeyValueTable rows={entries} />;
+            }
+        } catch {
+            // Malformed URL-encoded data — fall through to raw display
+        }
+    }
 
-	return <PrettyPre text={body} />;
+    return <PrettyPre text={body} />;
 }
 
 /**
@@ -87,11 +87,11 @@ function renderBody(body, contentType) {
  * @param {{ text: string }} props
  */
 function PrettyPre({ text }) {
-	return (
-		<pre className="text-xs font-mono bg-muted/50 rounded-md p-4 overflow-auto max-h-[400px] whitespace-pre-wrap break-all text-foreground leading-relaxed">
-			{text}
-		</pre>
-	);
+    return (
+        <pre className="text-xs font-mono bg-muted/50 rounded-md p-4 overflow-auto max-h-[400px] whitespace-pre-wrap break-all text-foreground leading-relaxed">
+            {text}
+        </pre>
+    );
 }
 
 /**
@@ -100,30 +100,32 @@ function PrettyPre({ text }) {
  * @param {{ rows: [string, string][] }} props
  */
 function KeyValueTable({ rows }) {
-	return (
-		<div className="overflow-auto max-h-[400px] rounded-md border border-border">
-			<table className="w-full text-xs">
-				<thead>
-					<tr className="bg-muted/50 border-b border-border">
-						<th className="px-3 py-2 text-left font-medium text-muted-foreground w-1/3">
-							Key
-						</th>
-						<th className="px-3 py-2 text-left font-medium text-muted-foreground">
-							Value
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					{rows.map(([key, value], index) => (
-						<tr key={index} className="border-b border-border last:border-0">
-							<td className="px-3 py-2 font-mono text-foreground font-medium">{key}</td>
-							<td className="px-3 py-2 font-mono text-muted-foreground break-all">
-								{value}
-							</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
-		</div>
-	);
+    return (
+        <div className="overflow-auto max-h-[400px] rounded-md border border-border">
+            <table className="w-full text-xs">
+                <thead>
+                    <tr className="bg-muted/50 border-b border-border">
+                        <th className="px-3 py-2 text-left font-medium text-muted-foreground w-1/3">
+                            Key
+                        </th>
+                        <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                            Value
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows.map(([key, value], index) => (
+                        <tr key={index} className="border-b border-border last:border-0">
+                            <td className="px-3 py-2 font-mono text-foreground font-medium">
+                                {key}
+                            </td>
+                            <td className="px-3 py-2 font-mono text-muted-foreground break-all">
+                                {value}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
 }

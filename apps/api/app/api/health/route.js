@@ -1,13 +1,13 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-import { connectDB } from "@/services/dbService";
-import { getRedis } from "@/services/redisService";
+import { connectDB } from '@/services/dbService';
+import { getRedis } from '@/services/redisService';
 
 export async function GET() {
     const health = {
         status: 'ok',
         mongodb: 'disconnected',
-        redis: 'disconnected'
+        redis: 'disconnected',
     };
 
     try {

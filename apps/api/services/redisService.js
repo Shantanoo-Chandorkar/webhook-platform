@@ -1,4 +1,4 @@
-import Redis from "ioredis";
+import Redis from 'ioredis';
 
 let redis;
 
@@ -9,7 +9,7 @@ let redis;
 export function getRedis() {
     if (!redis) {
         if (!process.env.REDIS_URL) {
-            throw new Error("REDIS_URL environment variable is not set.");
+            throw new Error('REDIS_URL environment variable is not set.');
         }
 
         redis = new Redis(process.env.REDIS_URL, {
@@ -23,8 +23,8 @@ export function getRedis() {
             lazyConnect: true,
         });
 
-        redis.on("error", (err) => {
-            console.error("Redis error:", err.message);
+        redis.on('error', (err) => {
+            console.error('Redis error:', err.message);
         });
     }
     return redis;

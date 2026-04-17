@@ -1,6 +1,6 @@
-import { connectDB } from "@/services/dbService";
-import WebhookRequest from "@/models/WebhookRequest";
-import WebhookReplay from "@/models/WebhookReplay";
+import { connectDB } from '@/services/dbService';
+import WebhookRequest from '@/models/WebhookRequest';
+import WebhookReplay from '@/models/WebhookReplay';
 
 /**
  * Replay engine — re-sends a stored webhook request to a user-supplied target URL.
@@ -12,15 +12,12 @@ export async function POST(request, { params }) {
     try {
         await connectDB();
     } catch {
-        return Response.json(
-            { error: "Database connection failed" },
-            { status: 500 }
-        );
+        return Response.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
     const original = await WebhookRequest.findById(requestId);
     if (!original) {
-        return Response.json({ error: "Request not found" }, { status: 404 });
+        return Response.json({ error: 'Request not found' }, { status: 404 });
     }
 
     let targetUrl;
@@ -29,26 +26,20 @@ export async function POST(request, { params }) {
         targetUrl = body.targetUrl;
     } catch {
         return Response.json(
-            { error: "Invalid request body. Expected { targetUrl: string }" },
-            { status: 400 }
+            { error: 'Invalid request body. Expected { targetUrl: string }' },
+            { status: 400 },
         );
     }
 
     if (!targetUrl) {
-        return Response.json(
-            { error: "targetUrl is required" },
-            { status: 400 }
-        );
+        return Response.json({ error: 'targetUrl is required' }, { status: 400 });
     }
 
     // Validate URL format
     try {
         new URL(targetUrl);
     } catch {
-        return Response.json(
-            { error: "Invalid URL format" },
-            { status: 400 }
-        );
+        return Response.json({ error: 'Invalid URL format' }, { status: 400 });
     }
 
     // Build the outbound request using the original method, headers, and body
@@ -57,10 +48,10 @@ export async function POST(request, { params }) {
     // Copy original headers, rewriting Host to the target's host
     const targetHost = new URL(targetUrl).host;
     for (const [key, value] of Object.entries(original.headers)) {
-        if (key.toLowerCase() === "host") continue; // Skip original Host header
+        if (key.toLowerCase() === 'host') continue; // Skip original Host header
         outgoingHeaders.set(key, value);
     }
-    outgoingHeaders.set("Host", targetHost);
+    outgoingHeaders.set('Host', targetHost);
 
     const replayRecord = {
         requestId: original._id,
@@ -84,7 +75,7 @@ export async function POST(request, { params }) {
         try {
             responseBody = await response.text();
         } catch {
-            responseBody = "[unable to read response body]";
+            responseBody = '[unable to read response body]';
         }
 
         // Parse response headers into a plain object for storage

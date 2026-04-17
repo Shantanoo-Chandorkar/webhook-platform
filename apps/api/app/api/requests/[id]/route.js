@@ -1,6 +1,6 @@
-import { connectDB } from "@/services/dbService";
-import WebhookRequest from "@/models/WebhookRequest";
-import WebhookReplay from "@/models/WebhookReplay";
+import { connectDB } from '@/services/dbService';
+import WebhookRequest from '@/models/WebhookRequest';
+import WebhookReplay from '@/models/WebhookReplay';
 
 /**
  * Returns full details of a single captured webhook request, including
@@ -12,15 +12,12 @@ export async function GET(request, { params }) {
     try {
         await connectDB();
     } catch {
-        return Response.json(
-            { error: "Database connection failed" },
-            { status: 500 }
-        );
+        return Response.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
     const webhookReq = await WebhookRequest.findById(requestId).lean();
     if (!webhookReq) {
-        return Response.json({ error: "Request not found" }, { status: 404 });
+        return Response.json({ error: 'Request not found' }, { status: 404 });
     }
 
     // Fetch any replays associated with this request
@@ -58,15 +55,12 @@ export async function DELETE(request, { params }) {
     try {
         await connectDB();
     } catch {
-        return Response.json(
-            { error: "Database connection failed" },
-            { status: 500 }
-        );
+        return Response.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
     const deleted = await WebhookRequest.findByIdAndDelete(requestId);
     if (!deleted) {
-        return Response.json({ error: "Request not found" }, { status: 404 });
+        return Response.json({ error: 'Request not found' }, { status: 404 });
     }
 
     // Cascade delete: remove all replays for this request

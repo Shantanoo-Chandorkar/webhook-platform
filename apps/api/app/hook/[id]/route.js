@@ -1,7 +1,7 @@
-import { connectDB } from "@/services/dbService";
-import { getRedis } from "@/services/redisService";
-import Endpoint from "@/models/Endpoint";
-import WebhookRequest from "@/models/WebhookRequest";
+import { connectDB } from '@/services/dbService';
+import { getRedis } from '@/services/redisService';
+import Endpoint from '@/models/Endpoint';
+import WebhookRequest from '@/models/WebhookRequest';
 
 /**
  * Catch-all webhook receiver — accepts ANY HTTP method to /hook/:slug.
@@ -41,17 +41,14 @@ async function handleWebhook(request, params) {
     try {
         await connectDB();
     } catch {
-        return Response.json(
-            { error: "Database connection failed" },
-            { status: 200 }
-        );
+        return Response.json({ error: 'Database connection failed' }, { status: 200 });
     }
 
     // Look up the endpoint by its public slug
     const endpoint = await Endpoint.findOne({ slug });
     if (!endpoint) {
         // Still return 200 to avoid sender retry loops
-        return Response.json({ accepted: false, reason: "unknown endpoint" }, { status: 200 });
+        return Response.json({ accepted: false, reason: 'unknown endpoint' }, { status: 200 });
     }
 
     // Capture all request details
@@ -70,9 +67,9 @@ async function handleWebhook(request, params) {
 
     // Extract source IP from common proxy headers or fall back to unknown
     const sourceIp =
-        request.headers.get("x-forwarded-for")?.split(",")[0] ||
-        request.headers.get("x-real-ip") ||
-        "unknown";
+        request.headers.get('x-forwarded-for')?.split(',')[0] ||
+        request.headers.get('x-real-ip') ||
+        'unknown';
 
     try {
         const webhookReq = await WebhookRequest.create({
@@ -102,13 +99,13 @@ async function handleWebhook(request, params) {
             await redis.publish(channel, JSON.stringify(ssePayload));
         } catch (err) {
             // Redis publish failure should not break the receiver — the request is already in MongoDB
-            console.error("Redis publish failed:", err.message);
+            console.error('Redis publish failed:', err.message);
         }
 
         return Response.json({ accepted: true }, { status: 200 });
     } catch (err) {
-        console.error("Webhook storage failed:", err.message);
+        console.error('Webhook storage failed:', err.message);
         // Still return 200 to prevent sender retries
-        return Response.json({ accepted: false, reason: "storage error" }, { status: 200 });
+        return Response.json({ accepted: false, reason: 'storage error' }, { status: 200 });
     }
 }

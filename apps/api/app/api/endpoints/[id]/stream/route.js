@@ -1,7 +1,7 @@
-import { connectDB } from "@/services/dbService";
-import { getRedis } from "@/services/redisService";
-import Endpoint from "@/models/Endpoint";
-import { buildCorsHeaders } from "@/lib/cors";
+import { connectDB } from '@/services/dbService';
+import { getRedis } from '@/services/redisService';
+import Endpoint from '@/models/Endpoint';
+import { buildCorsHeaders } from '@/lib/cors';
 
 /**
  * SSE stream endpoint — holds a long-lived connection and pushes
@@ -13,15 +13,12 @@ export async function GET(request, { params }) {
     try {
         await connectDB();
     } catch {
-        return Response.json(
-            { error: "Database connection failed" },
-            { status: 500 }
-        );
+        return Response.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
-    const endpoint = await Endpoint.findOne({ slug }).select("_id");
+    const endpoint = await Endpoint.findOne({ slug }).select('_id');
     if (!endpoint) {
-        return Response.json({ error: "Endpoint not found" }, { status: 404 });
+        return Response.json({ error: 'Endpoint not found' }, { status: 404 });
     }
 
     const channel = `webhook:${endpoint._id.toString()}`;
@@ -35,14 +32,14 @@ export async function GET(request, { params }) {
     const readableStream = new ReadableStream({
         start(ctrl) {
             // Listen for pub/sub messages on the Redis channel
-            subscriber.on("message", (_ch, message) => {
+            subscriber.on('message', (_ch, message) => {
                 const sseData = `event: webhook\ndata: ${message}\n\n`;
                 ctrl.enqueue(encoder.encode(sseData));
             });
 
             // Subscribe to the Redis pub/sub channel for this endpoint
             subscriber.subscribe(channel).catch((err) => {
-                console.error("Redis subscribe failed:", err.message);
+                console.error('Redis subscribe failed:', err.message);
                 ctrl.close();
             });
 
@@ -60,15 +57,15 @@ export async function GET(request, { params }) {
     // The proxy layer cannot reliably set headers on a streaming response after
     // it has started, so CORS headers are applied here directly using the same
     // utility as proxy.js to keep the policy consistent across all routes.
-    const origin = request.headers.get("origin") ?? "";
+    const origin = request.headers.get('origin') ?? '';
     const corsHeaders = buildCorsHeaders(origin);
 
     return new Response(readableStream, {
         headers: {
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+            'X-Accel-Buffering': 'no',
             ...corsHeaders,
         },
     });

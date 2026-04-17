@@ -9,9 +9,9 @@ import { useDebounce } from '@/hooks/useDebounce';
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
 const TIME_RANGE_OPTIONS = [
-	{ label: 'All time', value: 'all' },
-	{ label: 'Last 1h', value: '1h' },
-	{ label: 'Last 5m', value: '5m' },
+    { label: 'All time', value: 'all' },
+    { label: 'Last 1h', value: '1h' },
+    { label: 'Last 5m', value: '5m' },
 ];
 
 /**
@@ -30,134 +30,134 @@ const TIME_RANGE_OPTIONS = [
  * }} props
  */
 export function FilterBar({ filters, onChange }) {
-	const router = useRouter();
-	const searchParams = useSearchParams();
+    const router = useRouter();
+    const searchParams = useSearchParams();
 
-	// Local state gives the inputs instant visual feedback while typing
-	const [localContentType, setLocalContentType] = useState(filters.contentType);
-	const [localBody, setLocalBody] = useState(filters.body);
+    // Local state gives the inputs instant visual feedback while typing
+    const [localContentType, setLocalContentType] = useState(filters.contentType);
+    const [localBody, setLocalBody] = useState(filters.body);
 
-	// Debounced values — these drive the actual filter application and URL update
-	const debouncedContentType = useDebounce(localContentType, 300);
-	const debouncedBody = useDebounce(localBody, 300);
+    // Debounced values — these drive the actual filter application and URL update
+    const debouncedContentType = useDebounce(localContentType, 300);
+    const debouncedBody = useDebounce(localBody, 300);
 
-	// Sync URL params → filter state on mount so that shared URLs restore filters
-	useEffect(() => {
-		const methods = searchParams.get('methods');
-		const contentType = searchParams.get('contentType') ?? '';
-		const body = searchParams.get('body') ?? '';
-		const timeRange = searchParams.get('timeRange') ?? 'all';
+    // Sync URL params → filter state on mount so that shared URLs restore filters
+    useEffect(() => {
+        const methods = searchParams.get('methods');
+        const contentType = searchParams.get('contentType') ?? '';
+        const body = searchParams.get('body') ?? '';
+        const timeRange = searchParams.get('timeRange') ?? 'all';
 
-		onChange({
-			methods: methods ? methods.split(',').filter(Boolean) : [],
-			contentType,
-			body,
-			timeRange,
-		});
+        onChange({
+            methods: methods ? methods.split(',').filter(Boolean) : [],
+            contentType,
+            body,
+            timeRange,
+        });
 
-		// Sync local text state to match URL-restored values
-		setLocalContentType(contentType);
-		setLocalBody(body);
-		// Only on mount — eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+        // Sync local text state to match URL-restored values
+        setLocalContentType(contentType);
+        setLocalBody(body);
+        // Only on mount — eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-	// Apply filter + update URL only after the user has stopped typing
-	useEffect(() => {
-		updateFilters({ contentType: debouncedContentType });
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [debouncedContentType]);
+    // Apply filter + update URL only after the user has stopped typing
+    useEffect(() => {
+        updateFilters({ contentType: debouncedContentType });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedContentType]);
 
-	useEffect(() => {
-		updateFilters({ body: debouncedBody });
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [debouncedBody]);
+    useEffect(() => {
+        updateFilters({ body: debouncedBody });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedBody]);
 
-	/**
-	 * Applies a partial filter update, merges it into state, and reflects the
-	 * change in the URL without triggering a page navigation.
-	 *
-	 * @param {Partial<typeof filters>} partial
-	 */
-	function updateFilters(partial) {
-		const next = { ...filters, ...partial };
-		onChange(next);
+    /**
+     * Applies a partial filter update, merges it into state, and reflects the
+     * change in the URL without triggering a page navigation.
+     *
+     * @param {Partial<typeof filters>} partial
+     */
+    function updateFilters(partial) {
+        const next = { ...filters, ...partial };
+        onChange(next);
 
-		const params = new URLSearchParams(searchParams);
-		if (next.methods.length > 0) {
-			params.set('methods', next.methods.join(','));
-		} else {
-			params.delete('methods');
-		}
-		if (next.contentType) params.set('contentType', next.contentType);
-		else params.delete('contentType');
-		if (next.body) params.set('body', next.body);
-		else params.delete('body');
-		if (next.timeRange !== 'all') params.set('timeRange', next.timeRange);
-		else params.delete('timeRange');
+        const params = new URLSearchParams(searchParams);
+        if (next.methods.length > 0) {
+            params.set('methods', next.methods.join(','));
+        } else {
+            params.delete('methods');
+        }
+        if (next.contentType) params.set('contentType', next.contentType);
+        else params.delete('contentType');
+        if (next.body) params.set('body', next.body);
+        else params.delete('body');
+        if (next.timeRange !== 'all') params.set('timeRange', next.timeRange);
+        else params.delete('timeRange');
 
-		router.replace(`?${params.toString()}`, { scroll: false });
-	}
+        router.replace(`?${params.toString()}`, { scroll: false });
+    }
 
-	function toggleMethod(method) {
-		const current = filters.methods;
-		const next = current.includes(method)
-			? current.filter((m) => m !== method)
-			: [...current, method];
-		updateFilters({ methods: next });
-	}
+    function toggleMethod(method) {
+        const current = filters.methods;
+        const next = current.includes(method)
+            ? current.filter((m) => m !== method)
+            : [...current, method];
+        updateFilters({ methods: next });
+    }
 
-	return (
-		<div className="flex flex-col gap-3 p-3 border-b border-border">
-			{/* Method checkboxes */}
-			<div className="flex flex-wrap gap-1.5">
-				{HTTP_METHODS.map((method) => {
-					const active = filters.methods.includes(method);
-					return (
-						<button
-							key={method}
-							onClick={() => toggleMethod(method)}
-							className={cn(
-								'px-2 py-0.5 rounded text-xs font-mono font-semibold border transition-colors',
-								active
-									? 'bg-primary text-primary-foreground border-primary'
-									: 'bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground',
-							)}
-						>
-							{method}
-						</button>
-					);
-				})}
-			</div>
+    return (
+        <div className="flex flex-col gap-3 p-3 border-b border-border">
+            {/* Method checkboxes */}
+            <div className="flex flex-wrap gap-1.5">
+                {HTTP_METHODS.map((method) => {
+                    const active = filters.methods.includes(method);
+                    return (
+                        <button
+                            key={method}
+                            onClick={() => toggleMethod(method)}
+                            className={cn(
+                                'px-2 py-0.5 rounded text-xs font-mono font-semibold border transition-colors',
+                                active
+                                    ? 'bg-primary text-primary-foreground border-primary'
+                                    : 'bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground',
+                            )}
+                        >
+                            {method}
+                        </button>
+                    );
+                })}
+            </div>
 
-			{/* Content-Type and body search — local state provides instant feedback;
+            {/* Content-Type and body search — local state provides instant feedback;
 			    filter application is debounced to avoid re-filtering on every keystroke */}
-			<Input
-				placeholder="Filter by content-type…"
-				value={localContentType}
-				onChange={(e) => setLocalContentType(e.target.value)}
-				className="h-7 text-xs"
-			/>
-			<Input
-				placeholder="Search in body…"
-				value={localBody}
-				onChange={(e) => setLocalBody(e.target.value)}
-				className="h-7 text-xs"
-			/>
+            <Input
+                placeholder="Filter by content-type…"
+                value={localContentType}
+                onChange={(e) => setLocalContentType(e.target.value)}
+                className="h-7 text-xs"
+            />
+            <Input
+                placeholder="Search in body…"
+                value={localBody}
+                onChange={(e) => setLocalBody(e.target.value)}
+                className="h-7 text-xs"
+            />
 
-			{/* Time range */}
-			<select
-				value={filters.timeRange}
-				onChange={(e) => updateFilters({ timeRange: e.target.value })}
-				className="h-7 text-xs rounded-md border border-input bg-background px-2 text-foreground"
-			>
-				{TIME_RANGE_OPTIONS.map((opt) => (
-					<option key={opt.value} value={opt.value}>
-						{opt.label}
-					</option>
-				))}
-			</select>
-		</div>
-	);
+            {/* Time range */}
+            <select
+                value={filters.timeRange}
+                onChange={(e) => updateFilters({ timeRange: e.target.value })}
+                className="h-7 text-xs rounded-md border border-input bg-background px-2 text-foreground"
+            >
+                {TIME_RANGE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
 }
 
 /**
@@ -171,30 +171,30 @@ export function FilterBar({ filters, onChange }) {
  * @returns {Array}
  */
 export function applyFilters(requests, filters) {
-	return requests.filter((req) => {
-		// Method filter: if none selected, show all
-		if (filters.methods.length > 0 && !filters.methods.includes(req.method)) {
-			return false;
-		}
+    return requests.filter((req) => {
+        // Method filter: if none selected, show all
+        if (filters.methods.length > 0 && !filters.methods.includes(req.method)) {
+            return false;
+        }
 
-		// Content-type substring match
-		if (filters.contentType) {
-			const ct = req.headers?.['content-type'] ?? req.headers?.['Content-Type'] ?? '';
-			if (!ct.toLowerCase().includes(filters.contentType.toLowerCase())) return false;
-		}
+        // Content-type substring match
+        if (filters.contentType) {
+            const ct = req.headers?.['content-type'] ?? req.headers?.['Content-Type'] ?? '';
+            if (!ct.toLowerCase().includes(filters.contentType.toLowerCase())) return false;
+        }
 
-		// Body substring match
-		if (filters.body) {
-			const bodyText = req.body ?? '';
-			if (!bodyText.toLowerCase().includes(filters.body.toLowerCase())) return false;
-		}
+        // Body substring match
+        if (filters.body) {
+            const bodyText = req.body ?? '';
+            if (!bodyText.toLowerCase().includes(filters.body.toLowerCase())) return false;
+        }
 
-		// Time range filter
-		if (filters.timeRange !== 'all') {
-			const cutoff = filters.timeRange === '5m' ? 5 * 60 * 1000 : 60 * 60 * 1000;
-			if (Date.now() - new Date(req.receivedAt).getTime() > cutoff) return false;
-		}
+        // Time range filter
+        if (filters.timeRange !== 'all') {
+            const cutoff = filters.timeRange === '5m' ? 5 * 60 * 1000 : 60 * 60 * 1000;
+            if (Date.now() - new Date(req.receivedAt).getTime() > cutoff) return false;
+        }
 
-		return true;
-	});
+        return true;
+    });
 }

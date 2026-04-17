@@ -1,5 +1,5 @@
-import mongoose from "mongoose";
-const {Schema} = mongoose;
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
 
 const webhookReplaySchema = new Schema({
     requestId: {
@@ -51,7 +51,7 @@ const webhookReplaySchema = new Schema({
     },
 });
 
-webhookReplaySchema.index({ requestMethod: 1, replayedAt : -1});
+webhookReplaySchema.index({ requestMethod: 1, replayedAt: -1 });
 
 const WebhookReplay = mongoose.model('WebhookReplay', webhookReplaySchema);
 export default WebhookReplay;

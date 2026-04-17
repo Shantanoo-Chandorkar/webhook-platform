@@ -14,40 +14,40 @@ import { useEffect, useRef, useState } from 'react';
  * @returns {{ status: 'connecting'|'connected'|'reconnecting' }}
  */
 export function useSSE(url, onMessage) {
-	const [status, setStatus] = useState('connecting');
-	// Keep a stable ref to the callback so the effect doesn't re-run when the
-	// parent component re-renders with a new inline function reference.
-	const onMessageRef = useRef(onMessage);
-	onMessageRef.current = onMessage;
+    const [status, setStatus] = useState('connecting');
+    // Keep a stable ref to the callback so the effect doesn't re-run when the
+    // parent component re-renders with a new inline function reference.
+    const onMessageRef = useRef(onMessage);
+    onMessageRef.current = onMessage;
 
-	useEffect(() => {
-		if (!url) return;
+    useEffect(() => {
+        if (!url) return;
 
-		const source = new EventSource(url);
+        const source = new EventSource(url);
 
-		source.addEventListener('connected', () => {
-			setStatus('connected');
-		});
+        source.addEventListener('connected', () => {
+            setStatus('connected');
+        });
 
-		source.addEventListener('webhook', (event) => {
-			try {
-				const data = JSON.parse(event.data);
-				onMessageRef.current('webhook', data);
-			} catch {
-				// Malformed SSE data — skip silently rather than crashing the UI
-			}
-		});
+        source.addEventListener('webhook', (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                onMessageRef.current('webhook', data);
+            } catch {
+                // Malformed SSE data — skip silently rather than crashing the UI
+            }
+        });
 
-		// The browser marks EventSource as CLOSED on error and retries automatically.
-		// We reflect this as 'reconnecting' until the 'connected' event fires again.
-		source.onerror = () => {
-			setStatus('reconnecting');
-		};
+        // The browser marks EventSource as CLOSED on error and retries automatically.
+        // We reflect this as 'reconnecting' until the 'connected' event fires again.
+        source.onerror = () => {
+            setStatus('reconnecting');
+        };
 
-		return () => {
-			source.close();
-		};
-	}, [url]);
+        return () => {
+            source.close();
+        };
+    }, [url]);
 
-	return { status };
+    return { status };
 }

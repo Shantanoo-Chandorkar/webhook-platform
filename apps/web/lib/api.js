@@ -17,18 +17,18 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
  * @throws {Error} With the server's error message if the response is not OK
  */
 async function request(path, options = {}) {
-	const response = await fetch(`${BASE_URL}${path}`, {
-		headers: { 'Content-Type': 'application/json', ...options.headers },
-		...options,
-	});
+    const response = await fetch(`${BASE_URL}${path}`, {
+        headers: { 'Content-Type': 'application/json', ...options.headers },
+        ...options,
+    });
 
-	const json = await response.json();
+    const json = await response.json();
 
-	if (!response.ok) {
-		throw new Error(json.error ?? `Request failed with status ${response.status}`);
-	}
+    if (!response.ok) {
+        throw new Error(json.error ?? `Request failed with status ${response.status}`);
+    }
 
-	return json;
+    return json;
 }
 
 /**
@@ -37,7 +37,7 @@ async function request(path, options = {}) {
  * @returns {Promise<{ id: string, slug: string, url: string, defaultReplayUrl: string|null, expiresAt: string }>}
  */
 export async function createEndpoint() {
-	return request('/api/endpoints', { method: 'POST' });
+    return request('/api/endpoints', { method: 'POST' });
 }
 
 /**
@@ -47,7 +47,7 @@ export async function createEndpoint() {
  * @returns {Promise<{ id: string, slug: string, url: string, defaultReplayUrl: string|null, createdAt: string, expiresAt: string }>}
  */
 export async function getEndpoint(slug) {
-	return request(`/api/endpoints/${slug}`);
+    return request(`/api/endpoints/${slug}`);
 }
 
 /**
@@ -58,10 +58,10 @@ export async function getEndpoint(slug) {
  * @returns {Promise<{ id: string, slug: string, url: string, defaultReplayUrl: string|null, createdAt: string, expiresAt: string }>}
  */
 export async function patchEndpoint(slug, payload) {
-	return request(`/api/endpoints/${slug}`, {
-		method: 'PATCH',
-		body: JSON.stringify(payload),
-	});
+    return request(`/api/endpoints/${slug}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+    });
 }
 
 /**
@@ -73,7 +73,7 @@ export async function patchEndpoint(slug, payload) {
  * @returns {Promise<{ requests: Array, totalCount: number, totalPages: number, page: number }>}
  */
 export async function getRequests(slug, page = 1, limit = 100) {
-	return request(`/api/endpoints/${slug}/requests?page=${page}&limit=${limit}`);
+    return request(`/api/endpoints/${slug}/requests?page=${page}&limit=${limit}`);
 }
 
 /**
@@ -83,7 +83,7 @@ export async function getRequests(slug, page = 1, limit = 100) {
  * @returns {Promise<{ id: string, method: string, headers: object, body: string|null, query: object, sourceIp: string, receivedAt: string, replays: Array }>}
  */
 export async function getRequest(requestId) {
-	return request(`/api/requests/${requestId}`);
+    return request(`/api/requests/${requestId}`);
 }
 
 /**
@@ -93,7 +93,7 @@ export async function getRequest(requestId) {
  * @returns {Promise<{ deleted: true }>}
  */
 export async function deleteRequest(requestId) {
-	return request(`/api/requests/${requestId}`, { method: 'DELETE' });
+    return request(`/api/requests/${requestId}`, { method: 'DELETE' });
 }
 
 /**
@@ -104,8 +104,8 @@ export async function deleteRequest(requestId) {
  * @returns {Promise<{ responseStatus: number, responseBody: string, success: boolean, errorMessage: string|null }>}
  */
 export async function replayRequest(requestId, targetUrl) {
-	return request(`/api/requests/${requestId}/replay`, {
-		method: 'POST',
-		body: JSON.stringify({ targetUrl }),
-	});
+    return request(`/api/requests/${requestId}/replay`, {
+        method: 'POST',
+        body: JSON.stringify({ targetUrl }),
+    });
 }

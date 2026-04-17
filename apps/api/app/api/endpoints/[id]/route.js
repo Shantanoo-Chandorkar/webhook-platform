@@ -1,5 +1,5 @@
-import { connectDB } from "@/services/dbService";
-import Endpoint from "@/models/Endpoint";
+import { connectDB } from '@/services/dbService';
+import Endpoint from '@/models/Endpoint';
 
 /**
  * Returns endpoint metadata including slug, default replay URL, and expiry.
@@ -10,15 +10,12 @@ export async function GET(request, { params }) {
     try {
         await connectDB();
     } catch {
-        return Response.json(
-            { error: "Database connection failed" },
-            { status: 500 }
-        );
+        return Response.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
     const endpoint = await Endpoint.findOne({ slug }).lean();
     if (!endpoint) {
-        return Response.json({ error: "Endpoint not found" }, { status: 404 });
+        return Response.json({ error: 'Endpoint not found' }, { status: 404 });
     }
 
     return Response.json({
@@ -41,10 +38,7 @@ export async function PATCH(request, { params }) {
     try {
         await connectDB();
     } catch {
-        return Response.json(
-            { error: "Database connection failed" },
-            { status: 500 }
-        );
+        return Response.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
     let defaultReplayUrl;
@@ -53,36 +47,30 @@ export async function PATCH(request, { params }) {
         defaultReplayUrl = body.defaultReplayUrl;
     } catch {
         return Response.json(
-            { error: "Invalid request body. Expected { defaultReplayUrl: string }" },
-            { status: 400 }
+            { error: 'Invalid request body. Expected { defaultReplayUrl: string }' },
+            { status: 400 },
         );
     }
 
     if (!defaultReplayUrl) {
-        return Response.json(
-            { error: "defaultReplayUrl is required" },
-            { status: 400 }
-        );
+        return Response.json({ error: 'defaultReplayUrl is required' }, { status: 400 });
     }
 
     // Validate URL format
     try {
         new URL(defaultReplayUrl);
     } catch {
-        return Response.json(
-            { error: "Invalid URL format" },
-            { status: 400 }
-        );
+        return Response.json({ error: 'Invalid URL format' }, { status: 400 });
     }
 
     const endpoint = await Endpoint.findOneAndUpdate(
         { slug },
         { defaultReplayUrl },
-        { new: true }
+        { new: true },
     ).lean();
 
     if (!endpoint) {
-        return Response.json({ error: "Endpoint not found" }, { status: 404 });
+        return Response.json({ error: 'Endpoint not found' }, { status: 404 });
     }
 
     return Response.json({

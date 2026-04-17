@@ -18,11 +18,11 @@
  * @returns {string[]} List of permitted origins (e.g. ["https://app.example.com"])
  */
 export function getAllowedOrigins() {
-	const raw = process.env.ALLOWED_ORIGINS ?? '';
-	return raw
-		.split(',')
-		.map((origin) => origin.trim())
-		.filter(Boolean);
+    const raw = process.env.ALLOWED_ORIGINS ?? '';
+    return raw
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean);
 }
 
 /**
@@ -36,12 +36,12 @@ export function getAllowedOrigins() {
  * @returns {Record<string, string>} Headers to apply to the response
  */
 export function buildCorsHeaders(requestOrigin) {
-	const allowedOrigins = getAllowedOrigins();
-	const isAllowed = allowedOrigins.includes(requestOrigin);
+    const allowedOrigins = getAllowedOrigins();
+    const isAllowed = allowedOrigins.includes(requestOrigin);
 
-	return {
-		...(isAllowed && { 'Access-Control-Allow-Origin': requestOrigin }),
-		'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-		'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-	};
+    return {
+        ...(isAllowed && { 'Access-Control-Allow-Origin': requestOrigin }),
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    };
 }
