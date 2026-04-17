@@ -32,7 +32,7 @@ export function HeroSection({ onGenerate, isGenerating, error }) {
 
                 <div className="flex flex-col items-center gap-2 mt-2">
                     <Button size="lg" onClick={onGenerate} disabled={isGenerating} className="px-8">
-                        {isGenerating ? 'Generating...' : 'Get Started Free'}
+                        {isGenerating ? 'Generating...' : 'Generate Endpoint'}
                     </Button>
                     <p className="text-xs text-muted-foreground">
                         No signup required. Endpoints expire after 24 hours.

@@ -1,7 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-
 /**
  * Sticky top navigation bar shown on the landing page.
  *
@@ -20,9 +18,6 @@ export function SiteNav({ onGenerate, isGenerating }) {
                 <span className="text-sm font-semibold text-foreground tracking-tight">
                     WebhookBin
                 </span>
-                <Button size="sm" onClick={onGenerate} disabled={isGenerating}>
-                    {isGenerating ? 'Generating...' : 'Generate Endpoint'}
-                </Button>
             </div>
         </header>
     );
