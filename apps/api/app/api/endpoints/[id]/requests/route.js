@@ -27,7 +27,7 @@ export async function GET(request, { params }) {
 
     const total = await WebhookRequest.countDocuments({ endpointId: endpoint._id });
     const requests = await WebhookRequest.find({ endpointId: endpoint._id })
-        .select('_id method sourceIp receivedAt')
+        .select('_id method sourceIp receivedAt headers body')
         .sort({ receivedAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -43,6 +43,8 @@ export async function GET(request, { params }) {
             method: r.method,
             sourceIp: r.sourceIp,
             receivedAt: r.receivedAt,
+            headers: r.headers ?? {},
+            body: r.body ?? null,
         })),
     });
 }
