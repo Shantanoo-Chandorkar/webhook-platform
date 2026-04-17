@@ -18,21 +18,21 @@ import { buildCorsHeaders } from '@/lib/cors';
  * stay consistent with this policy.
  */
 export function middleware(request) {
-	const origin = request.headers.get('origin') ?? '';
-	const corsHeaders = buildCorsHeaders(origin);
+    const origin = request.headers.get('origin') ?? '';
+    const corsHeaders = buildCorsHeaders(origin);
 
-	// Respond to OPTIONS preflights immediately — no need to hit the route handler
-	if (request.method === 'OPTIONS') {
-		return new NextResponse(null, { status: 204, headers: corsHeaders });
-	}
+    // Respond to OPTIONS preflights immediately — no need to hit the route handler
+    if (request.method === 'OPTIONS') {
+        return new NextResponse(null, { status: 204, headers: corsHeaders });
+    }
 
-	const response = NextResponse.next();
-	for (const [key, value] of Object.entries(corsHeaders)) {
-		response.headers.set(key, value);
-	}
-	return response;
+    const response = NextResponse.next();
+    for (const [key, value] of Object.entries(corsHeaders)) {
+        response.headers.set(key, value);
+    }
+    return response;
 }
 
 export const config = {
-	matcher: ['/api/:path*', '/hook/:path*'],
+    matcher: ['/api/:path*', '/hook/:path*'],
 };

@@ -20,13 +20,13 @@ A self-hosted webhook inspection tool. Generate a unique endpoint URL, capture e
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | Next.js 16, React 19, Tailwind CSS, Shadcn |
-| Backend | Next.js 16 (API routes) |
-| Database | MongoDB (Mongoose) |
-| Cache / Pub-Sub | Redis (Upstash) |
-| Monorepo | npm workspaces |
+| Layer           | Technology                                 |
+| --------------- | ------------------------------------------ |
+| Frontend        | Next.js 16, React 19, Tailwind CSS, Shadcn |
+| Backend         | Next.js 16 (API routes)                    |
+| Database        | MongoDB (Mongoose)                         |
+| Cache / Pub-Sub | Redis (Upstash)                            |
+| Monorepo        | npm workspaces                             |
 
 ---
 
@@ -81,12 +81,12 @@ API_BASE_URL=http://localhost:3001
 ALLOWED_ORIGINS=http://localhost:3000
 ```
 
-| Variable | Description |
-|---|---|
-| `MONGODB_URI` | MongoDB connection string |
-| `REDIS_URL` | Redis connection string (use `rediss://` for TLS, `redis://` for plain) |
-| `API_BASE_URL` | Public base URL of the API server. Used to construct webhook endpoint URLs |
-| `ALLOWED_ORIGINS` | Comma-separated list of frontend origins permitted by CORS |
+| Variable          | Description                                                                |
+| ----------------- | -------------------------------------------------------------------------- |
+| `MONGODB_URI`     | MongoDB connection string                                                  |
+| `REDIS_URL`       | Redis connection string (use `rediss://` for TLS, `redis://` for plain)    |
+| `API_BASE_URL`    | Public base URL of the API server. Used to construct webhook endpoint URLs |
+| `ALLOWED_ORIGINS` | Comma-separated list of frontend origins permitted by CORS                 |
 
 ### Web (`apps/web/.env.local`)
 
@@ -96,8 +96,8 @@ Create the file manually:
 NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
-| Variable | Description |
-|---|---|
+| Variable              | Description                                               |
+| --------------------- | --------------------------------------------------------- |
 | `NEXT_PUBLIC_API_URL` | Public base URL of the API server. Exposed to the browser |
 
 ---

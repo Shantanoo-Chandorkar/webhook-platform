@@ -5,3 +5,5 @@ build
 dist
 *.min.js
 package-lock.json
+.md
+!README.md
