@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -57,6 +58,9 @@ export function EndpointHeader({ endpoint, sseStatus, onDefaultReplayUrlSave }) 
         try {
             await onDefaultReplayUrlSave(replayUrlInput);
             setEditingReplayUrl(false);
+            toast.success('Default replay URL saved');
+        } catch {
+            toast.error('Failed to save replay URL');
         } finally {
             setIsSaving(false);
         }

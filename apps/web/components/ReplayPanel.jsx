@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -60,8 +61,13 @@ export function ReplayPanel({ request, endpointSlug, endpointDefaultReplayUrl, o
             setResult(replayResult);
 
             if (saveAsDefault) {
-                await patchEndpoint(endpointSlug, { defaultReplayUrl: targetUrl });
-                onReplayUrlSaved(targetUrl);
+                try {
+                    await patchEndpoint(endpointSlug, { defaultReplayUrl: targetUrl });
+                    onReplayUrlSaved(targetUrl);
+                    toast.success('Default replay URL saved');
+                } catch {
+                    toast.error('Failed to save default replay URL');
+                }
             }
         } catch (err) {
             setReplayError(err.message);
