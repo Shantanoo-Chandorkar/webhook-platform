@@ -45,9 +45,11 @@ export async function POST(request, { params }) {
     // Build the outbound request using the original method, headers, and body
     const outgoingHeaders = new Headers();
 
-    // Copy original headers, rewriting Host to the target's host
+    // Copy original headers, rewriting Host to the target's host.
+    // original.headers is a Mongoose Map — iterate it directly rather than via
+    // Object.entries(), which does not yield Map entries.
     const targetHost = new URL(targetUrl).host;
-    for (const [key, value] of Object.entries(original.headers)) {
+    for (const [key, value] of original.headers) {
         if (key.toLowerCase() === 'host') continue; // Skip original Host header
         outgoingHeaders.set(key, value);
     }
