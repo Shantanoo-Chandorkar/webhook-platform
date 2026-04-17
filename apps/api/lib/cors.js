@@ -1,6 +1,6 @@
 /**
- * Shared CORS utilities used by both middleware.js (for standard routes) and any
- * route handler that returns a streaming response (like SSE), where the middleware
+ * Shared CORS utilities used by both proxy.js (for standard routes) and any
+ * route handler that returns a streaming response (like SSE), where the proxy
  * layer cannot reliably inject headers after the stream has started.
  *
  * Allowed origins are driven entirely by the ALLOWED_ORIGINS environment
