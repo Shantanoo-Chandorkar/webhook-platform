@@ -2,7 +2,7 @@
 
 A self-hosted webhook inspection tool. Generate a unique endpoint URL, capture every incoming HTTP request in real time, inspect headers, query parameters and body, and replay any request to a target URL of your choice.
 
-**Author:** cshan
+**Author:** Shantanoo Chandorkar
 
 ---
 
