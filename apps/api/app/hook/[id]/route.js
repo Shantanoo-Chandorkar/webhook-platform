@@ -6,7 +6,8 @@ import WebhookRequest from '@/models/WebhookRequest';
 
 /**
  * Catch-all webhook receiver — accepts ANY HTTP method to /hook/:slug.
- * Stores the full request and always responds 200 OK.
+ * Returns 200 on success, 410 if the endpoint is unknown or expired,
+ * 429 on rate limit, and 500 on infrastructure failure.
  */
 export async function POST(request, { params }) {
     return handleWebhook(request, params);
@@ -42,14 +43,14 @@ async function handleWebhook(request, params) {
     try {
         await connectDB();
     } catch {
-        return Response.json({ error: 'Database connection failed' }, { status: 200 });
+        return Response.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
     // Look up the endpoint by its public slug
     const endpoint = await Endpoint.findOne({ slug });
     if (!endpoint) {
-        // Still return 200 to avoid sender retry loops
-        return Response.json({ accepted: false, reason: 'unknown endpoint' }, { status: 200 });
+        // 410 Gone — endpoint does not exist or has expired; signals permanent unavailability
+        return Response.json({ accepted: false, reason: 'unknown endpoint' }, { status: 410 });
     }
 
     // Extract source IP before rate limiting — same logic used later for storage
@@ -143,7 +144,7 @@ async function handleWebhook(request, params) {
         return Response.json({ accepted: true }, { status: 200 });
     } catch (err) {
         console.error('Webhook storage failed:', err.message);
-        // Still return 200 to prevent sender retries
-        return Response.json({ accepted: false, reason: 'storage error' }, { status: 200 });
+        // 500 — webhook could not be persisted; sender may retry
+        return Response.json({ accepted: false, reason: 'storage error' }, { status: 500 });
     }
 }
